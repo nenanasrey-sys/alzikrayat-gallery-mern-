@@ -27,27 +27,26 @@ const Home = () => {
     }
   };
 
- const handleAddComment = async (photoId, e) => {
-    e.preventDefault();
-    const commentText = commentInputs[photoId];
-    if (!commentText || !commentText.trim()) return;
+const handleAddComment = async (photoId, e) => {
+  e.preventDefault();
+  const commentText = commentInputs[photoId];
+  if (!commentText || !commentText.trim()) return;
 
-    try {
-      // إرسال النص واسم المستخدم تجنباً لخطأ 500 في السيرفر
-      const res = await API.post(`/photos/${photoId}/comments`, { 
-        text: commentText,
-        username: "amna" // أو اسم المستخدم المخزن في التطبيق
-      });
-      
-      setPhotos(photos.map(photo => 
-        photo._id === photoId ? { ...photo, comments: res.data.comments || [...photo.comments, { text: commentText }] } : photo
-      ));
-      setCommentInputs({ ...commentInputs, [photoId]: '' });
-    } catch (err) {
-      console.error("Error adding comment", err);
-      alert('حدث خطأ في السيرفر (500)');
-    }
-  };
+  try {
+    const res = await API.post(`/photos/${photoId}/comment`, {
+      comment: commentText,
+      username: "amna"
+    });
+
+    setPhotos(photos.map(photo =>
+      photo._id === photoId ? res.data : photo
+    ));
+    setCommentInputs({ ...commentInputs, [photoId]: '' });
+  } catch (err) {
+    console.error("Error adding comment", err);
+    alert(err.response?.data?.error || err.response?.data?.message || 'حدث خطأ أثناء إضافة التعليق');
+  }
+};
 
   return (
     <div style={{ padding: '30px', direction: 'rtl', backgroundColor: '#f4f7f6', minHeight: '100vh', fontFamily: 'Cairo, sans-serif' }}>
@@ -101,7 +100,7 @@ const Home = () => {
                   {photo.comments && photo.comments.length > 0 ? (
                     photo.comments.map((comment, index) => (
                       <div key={index} style={{ borderBottom: '1px solid #dee2e6', padding: '4px 0', color: '#333' }}>
-                        <span>{comment.text || comment}</span>
+                        <span>{comment.comment || comment.text || comment}</span>
                       </div>
                     ))
                   ) : (
